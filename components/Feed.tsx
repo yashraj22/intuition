@@ -5,13 +5,24 @@ import { mockFeedItems } from "../data/mockFeed";
 import { FeedItem, RssFeed } from "../types/feed";
 import FeedCard from "./FeedCard";
 import { Headphones, Heart, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
+import Modal from 'react-modal'
+
+
+//some function
+if (typeof window !== 'undefined') {
+  Modal.setAppElement('body'); // Or another appropriate element
+}
+
 const Feed = () => {
   const [items, setItems] = useState<FeedItem[]>(mockFeedItems);
   const [activeCategory, setActiveCategory] = useState("Top Stories");
   const feedRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
+  // variables for the modal;
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [newFeedUrl, setNewFeedUrl] = useState(""); // State for new feed URL
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
 
@@ -24,6 +35,7 @@ const Feed = () => {
     const feeds: RssFeed[] = JSON.parse(
       localStorage.getItem("rssFeeds") || "[]"
     );
+
     const corsProxy = "https://api.allorigins.win/raw?url=";
 
     for (const feed of feeds) {
@@ -137,6 +149,36 @@ const Feed = () => {
     }
   };
 
+  // functions for modal handling
+
+  const openRSSModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeRSSModal = () => {
+    setIsModalOpen(false);
+    setNewFeedUrl(""); // Clear input field
+  };
+
+  const handleAddFeed = () => {
+    const rssFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
+    const newFeed = {
+      name: "Custom Feed", // Or let the user name it
+      url: newFeedUrl,
+    };
+
+    localStorage.setItem("rssFeeds", JSON.stringify([...rssFeeds, newFeed]));
+    toast.success("Feed added successfully. Refreshing feeds...");
+
+    // Refresh feeds (you might want a more efficient way to do this)
+    setItems([]); // Clear existing items to avoid duplicates
+    fetchRssFeedItems();
+
+    closeRSSModal();
+  };
+
+  
+
   return (
     <div className="bg-black min-h-screen">
       <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-black/90 backdrop-blur-lg">
@@ -145,7 +187,7 @@ const Feed = () => {
           <div className="flex gap-4">
             <button
               className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center"
-              onClick={() => router.push("/add-feed")}
+              onClick={openRSSModal}
             >
               <Plus className="w-5 h-5 text-white" />
             </button>
@@ -198,6 +240,57 @@ const Feed = () => {
           </div>
         )}
       </div>
+
+
+      {/* Modal */}
+
+      {/* The Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeRSSModal}
+        style={{
+          content: {
+            backgroundColor: '#111', // Example dark background
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '20px',
+            top: '50%',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto',
+            marginRight: '-50%',
+            transform: 'translate(-50%, -50%)',
+          },
+          overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.75)', // Semi-transparent overlay
+          }
+        }}
+      >
+        <h2 className="text-xl font-bold mb-4">Add RSS Feed</h2>
+        <input
+          type="text"
+          value={newFeedUrl}
+          onChange={(e) => setNewFeedUrl(e.target.value)}
+          placeholder="Enter RSS Feed URL"
+          className="w-full px-3 py-2 border rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        />
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleAddFeed}
+            className="bg-cyan-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          >
+            Add
+          </button>
+          <button
+            onClick={closeRSSModal}
+            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 };
