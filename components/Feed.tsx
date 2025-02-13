@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { mockFeedItems } from "../data/mockFeed";
+// import { mockFeedItems } from "../data/mockFeed";
 import { FeedItem, RssFeed } from "../types/feed";
 import FeedCard from "./FeedCard";
 import { Headphones, Heart, Plus } from "lucide-react";
@@ -15,73 +15,77 @@ if (typeof window !== 'undefined') {
 }
 
 const Feed = () => {
-  const [items, setItems] = useState<FeedItem[]>(mockFeedItems);
+  const [items, setItems] = useState<FeedItem[]>([]);
   const [activeCategory, setActiveCategory] = useState("Top Stories");
   const feedRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(false);
-  // const router = useRouter();
-  // variables for the modal;
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [newFeedUrl, setNewFeedUrl] = useState(""); // State for new feed URL
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newFeedUrl, setNewFeedUrl] = useState("");
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
+
+  const initialFeeds: RssFeed[] = [ // Initial popular tech feeds
+    { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
+    { id: "2", url: "https://www.theverge.com/rss/index.xml", name: "The Verge" },
+    { id: "3", url: "https://www.nasa.gov/rss/dyn/breaking_news.rss", name: "NASA News" },
+  ];
 
   const parseHtmlContent = (html: string): string => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent || "";
   };
 
-  const fetchRssFeedItems = async () => {
-    const feeds: RssFeed[] = JSON.parse(
-      localStorage.getItem("rssFeeds") || "[]"
-    );
-
+  const fetchRssFeedItems = async (feeds: RssFeed[]) => { // Accept feeds as an argument
     const corsProxy = "https://api.allorigins.win/raw?url=";
+    const newItems: FeedItem[] = []; // Store new items here to add at once
 
     for (const feed of feeds) {
       try {
         const response = await fetch(corsProxy + encodeURIComponent(feed.url));
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${feed.url}: ${response.status} ${response.statusText}`); // More descriptive error
+        }
         const data = await response.text();
         const parser = new DOMParser();
         const xml = parser.parseFromString(data, "text/xml");
 
         const items = xml.querySelectorAll("item");
-        const newItems: FeedItem[] = Array.from(items).map((item) => {
+        items.forEach((item) => {
           const title = item.querySelector("title")?.textContent || "";
-          const description = parseHtmlContent(
-            item.querySelector("description")?.textContent || ""
-          );
-          let imageUrl =
-            item.querySelector("enclosure")?.getAttribute("url") ||
-            item.querySelector("media\\:content")?.getAttribute("url");
+          const description = parseHtmlContent(item.querySelector("description")?.textContent || "");
+          let imageUrl = item.querySelector("enclosure")?.getAttribute("url") || item.querySelector("media\\:content")?.getAttribute("url");
 
           if (!imageUrl) {
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-              title
-            )}`;
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(title)}`;
           }
 
-          return {
+          newItems.push({
             id: Date.now().toString() + Math.random(),
             title,
             description,
             imageUrl,
             saved: false,
             author: item.querySelector("author")?.textContent || feed.name,
-          };
+            url: item.querySelector("link")?.textContent || "", // Add URL from <link> tag
+          });
         });
 
-        setItems((prev) => [...prev, ...newItems]);
+
       } catch (error) {
         console.error("Error fetching RSS feed:", error);
         toast.error(`Failed to fetch feed: ${feed.url}`);
       }
     }
+    setItems(newItems); // Set items once after fetching from all feeds
+    setLoading(false);
   };
 
+
   useEffect(() => {
-    fetchRssFeedItems();
-  }, []);
+    const storedFeeds = JSON.parse(localStorage.getItem("rssFeeds") || '[]');  // Add fallback empty array string
+    const feedsToFetch = storedFeeds.length > 0 ? storedFeeds : initialFeeds; // Use stored or initial
+    fetchRssFeedItems(feedsToFetch);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const loadMoreItems = async () => {
     if (loading) return;
@@ -90,9 +94,10 @@ const Feed = () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const newItems = [...mockFeedItems].map((item) => ({
-      ...item,
+    const newItems = [...initialFeeds].map((item) => ({
       id: `${parseInt(item.id) + items.length}`,
+      url: item.url,
+      name: item.name
     }));
 
     setItems((prev) => [...prev, ...newItems]);
@@ -151,29 +156,28 @@ const Feed = () => {
 
   // functions for modal handling
 
-  const openRSSModal = () => {
+   const openRSSModal = () => {
     setIsModalOpen(true);
   };
 
   const closeRSSModal = () => {
     setIsModalOpen(false);
-    setNewFeedUrl(""); // Clear input field
+    setNewFeedUrl("");
   };
 
   const handleAddFeed = () => {
-    const rssFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
+    const rssFeeds: RssFeed[] = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
     const newFeed = {
-      name: "Custom Feed", // Or let the user name it
+      id: Date.now().toString() + Math.random(), // Add a unique ID to each feed
+      name: "Custom Feed",
       url: newFeedUrl,
     };
 
     localStorage.setItem("rssFeeds", JSON.stringify([...rssFeeds, newFeed]));
     toast.success("Feed added successfully. Refreshing feeds...");
 
-    // Refresh feeds (you might want a more efficient way to do this)
-    setItems([]); // Clear existing items to avoid duplicates
-    fetchRssFeedItems();
-
+    setItems([]);
+    fetchRssFeedItems([...rssFeeds, newFeed]); // Pass the updated feeds array
     closeRSSModal();
   };
 
