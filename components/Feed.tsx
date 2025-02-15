@@ -6,12 +6,11 @@ import { FeedItem, RssFeed } from "../types/feed";
 import FeedCard from "./FeedCard";
 import { Headphones, Heart, Plus } from "lucide-react";
 // import { useRouter } from "next/navigation";
-import Modal from 'react-modal'
-
+import Modal from "react-modal";
 
 //some function
-if (typeof window !== 'undefined') {
-  Modal.setAppElement('body'); // Or another appropriate element
+if (typeof window !== "undefined") {
+  Modal.setAppElement("body"); // Or another appropriate element
 }
 
 const Feed = () => {
@@ -24,10 +23,19 @@ const Feed = () => {
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
 
-  const initialFeeds: RssFeed[] = [ // Initial popular tech feeds
+  const initialFeeds: RssFeed[] = [
+    // Initial popular tech feeds
     { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
-    { id: "2", url: "https://www.theverge.com/rss/index.xml", name: "The Verge" },
-    { id: "3", url: "https://www.nasa.gov/rss/dyn/breaking_news.rss", name: "NASA News" },
+    {
+      id: "2",
+      url: "https://www.theverge.com/rss/index.xml",
+      name: "The Verge",
+    },
+    {
+      id: "3",
+      url: "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+      name: "NASA News",
+    },
   ];
 
   const parseHtmlContent = (html: string): string => {
@@ -35,28 +43,71 @@ const Feed = () => {
     return doc.body.textContent || "";
   };
 
-  const fetchRssFeedItems = async (feeds: RssFeed[]) => { // Accept feeds as an argument
+  const fetchRssFeedItems = async (feeds: RssFeed[]) => {
     const corsProxy = "https://api.allorigins.win/raw?url=";
-    const newItems: FeedItem[] = []; // Store new items here to add at once
+    const newItems: FeedItem[] = [];
 
     for (const feed of feeds) {
       try {
         const response = await fetch(corsProxy + encodeURIComponent(feed.url));
         if (!response.ok) {
-          throw new Error(`Failed to fetch ${feed.url}: ${response.status} ${response.statusText}`); // More descriptive error
+          throw new Error(
+            `Failed to fetch ${feed.url}: ${response.status} ${response.statusText}`
+          );
         }
         const data = await response.text();
         const parser = new DOMParser();
         const xml = parser.parseFromString(data, "text/xml");
 
         const items = xml.querySelectorAll("item");
-        items.forEach((item) => {
+        for (const item of items) {
           const title = item.querySelector("title")?.textContent || "";
-          const description = parseHtmlContent(item.querySelector("description")?.textContent || "");
-          let imageUrl = item.querySelector("enclosure")?.getAttribute("url") || item.querySelector("media\\:content")?.getAttribute("url");
+          const description = parseHtmlContent(
+            item.querySelector("description")?.textContent || ""
+          );
+          const articleUrl = item.querySelector("link")?.textContent || "";
 
+          // Try to get image from RSS feed first
+          let imageUrl =
+            item.querySelector("enclosure")?.getAttribute("url") ||
+            item.querySelector("media\\:content")?.getAttribute("url");
+
+          // If no image in RSS, try to get it from article metadata
+          if (!imageUrl && articleUrl) {
+            try {
+              const articleResponse = await fetch(
+                corsProxy + encodeURIComponent(articleUrl)
+              );
+              const articleHtml = await articleResponse.text();
+              const articleDoc = parser.parseFromString(
+                articleHtml,
+                "text/html"
+              );
+
+              // Try various meta tags for images
+              imageUrl =
+                articleDoc
+                  .querySelector('meta[property="og:image"]')
+                  ?.getAttribute("content") ||
+                articleDoc
+                  .querySelector('meta[name="twitter:image"]')
+                  ?.getAttribute("content") ||
+                articleDoc
+                  .querySelector('meta[property="twitter:image"]')
+                  ?.getAttribute("content") ||
+                articleDoc
+                  .querySelector('link[rel="image_src"]')
+                  ?.getAttribute("href");
+            } catch (error) {
+              console.error("Error fetching article metadata:", error);
+            }
+          }
+
+          // Fallback to AI-generated image if no image found
           if (!imageUrl) {
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(title)}`;
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
+              title
+            )}`;
           }
 
           newItems.push({
@@ -66,23 +117,20 @@ const Feed = () => {
             imageUrl,
             saved: false,
             author: item.querySelector("author")?.textContent || feed.name,
-            url: item.querySelector("link")?.textContent || "", // Add URL from <link> tag
+            url: articleUrl,
           });
-        });
-
-
+        }
       } catch (error) {
         console.error("Error fetching RSS feed:", error);
         toast.error(`Failed to fetch feed: ${feed.url}`);
       }
     }
-    setItems(newItems); // Set items once after fetching from all feeds
+    setItems(newItems);
     setLoading(false);
   };
 
-
   useEffect(() => {
-    const storedFeeds = JSON.parse(localStorage.getItem("rssFeeds") || '[]');  // Add fallback empty array string
+    const storedFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]"); // Add fallback empty array string
     const feedsToFetch = storedFeeds.length > 0 ? storedFeeds : initialFeeds; // Use stored or initial
     fetchRssFeedItems(feedsToFetch);
   }, []); // Empty dependency array ensures this runs only once on mount
@@ -94,10 +142,14 @@ const Feed = () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const newItems = [...initialFeeds].map((item) => ({
+    const newItems: FeedItem[] = [...initialFeeds].map((item) => ({
       id: `${parseInt(item.id) + items.length}`,
+      title: item.name, // Assuming you want to use the name as the title
+      description: "", // Provide a default description or modify as needed
+      imageUrl: "", // Provide a default image URL or modify as needed
+      saved: false,
+      author: "", // Provide a default author or modify as needed
       url: item.url,
-      name: item.name
     }));
 
     setItems((prev) => [...prev, ...newItems]);
@@ -156,7 +208,7 @@ const Feed = () => {
 
   // functions for modal handling
 
-   const openRSSModal = () => {
+  const openRSSModal = () => {
     setIsModalOpen(true);
   };
 
@@ -166,7 +218,9 @@ const Feed = () => {
   };
 
   const handleAddFeed = () => {
-    const rssFeeds: RssFeed[] = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
+    const rssFeeds: RssFeed[] = JSON.parse(
+      localStorage.getItem("rssFeeds") || "[]"
+    );
     const newFeed = {
       id: Date.now().toString() + Math.random(), // Add a unique ID to each feed
       name: "Custom Feed",
@@ -180,8 +234,6 @@ const Feed = () => {
     fetchRssFeedItems([...rssFeeds, newFeed]); // Pass the updated feeds array
     closeRSSModal();
   };
-
-  
 
   return (
     <div className="bg-black min-h-screen">
@@ -245,7 +297,6 @@ const Feed = () => {
         )}
       </div>
 
-
       {/* Modal */}
 
       {/* The Modal */}
@@ -254,21 +305,21 @@ const Feed = () => {
         onRequestClose={closeRSSModal}
         style={{
           content: {
-            backgroundColor: '#111', // Example dark background
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '20px',
-            top: '50%',
-            left: '50%',
-            right: 'auto',
-            bottom: 'auto',
-            marginRight: '-50%',
-            transform: 'translate(-50%, -50%)',
+            backgroundColor: "#111", // Example dark background
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            padding: "20px",
+            top: "50%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
           },
           overlay: {
-            backgroundColor: 'rgba(0, 0, 0, 0.75)', // Semi-transparent overlay
-          }
+            backgroundColor: "rgba(0, 0, 0, 0.75)", // Semi-transparent overlay
+          },
         }}
       >
         <h2 className="text-xl font-bold mb-4">Add RSS Feed</h2>
@@ -294,7 +345,6 @@ const Feed = () => {
           </button>
         </div>
       </Modal>
-
     </div>
   );
 };
