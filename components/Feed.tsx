@@ -25,7 +25,7 @@ const Feed = () => {
 
   const initialFeeds: RssFeed[] = [
     // Initial popular tech feeds
-    { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
+    {       id: "1",       url: "https://techcrunch.com/feed/",       name: "TechCrunch"     },
     {
       id: "2",
       url: "https://www.theverge.com/rss/index.xml",
@@ -146,7 +146,7 @@ const Feed = () => {
       id: `${parseInt(item.id) + items.length}`,
       title: item.name, // Assuming you want to use the name as the title
       description: "", // Provide a default description or modify as needed
-      imageUrl: "", // Provide a default image URL or modify as needed
+      imageUrl: null, // Provide a default image URL or modify as needed
       saved: false,
       author: "", // Provide a default author or modify as needed
       url: item.url,
