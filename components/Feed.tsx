@@ -4,9 +4,10 @@ import { toast } from "sonner";
 // import { mockFeedItems } from "../data/mockFeed";
 import { FeedItem, RssFeed } from "../types/feed";
 import FeedCard from "./FeedCard";
-import { Headphones, Heart, Plus } from "lucide-react";
+import { Headphones, Rss, Plus } from "lucide-react";
 // import { useRouter } from "next/navigation";
 import Modal from "react-modal";
+import Link from "next/link";
 
 //some function
 if (typeof window !== "undefined") {
@@ -25,7 +26,7 @@ const Feed = () => {
 
   const initialFeeds: RssFeed[] = [
     // Initial popular tech feeds
-    {       id: "1",       url: "https://techcrunch.com/feed/",       name: "TechCrunch"     },
+    { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
     {
       id: "2",
       url: "https://www.theverge.com/rss/index.xml",
@@ -227,7 +228,10 @@ const Feed = () => {
       url: newFeedUrl,
     };
 
-    localStorage.setItem("rssFeeds", JSON.stringify([...rssFeeds, newFeed]));
+    localStorage.setItem(
+      "rssFeeds",
+      JSON.stringify([...initialFeeds, ...rssFeeds, newFeed])
+    );
     toast.success("Feed added successfully. Refreshing feeds...");
 
     setItems([]);
@@ -251,10 +255,9 @@ const Feed = () => {
               <Headphones className="w-6 h-6" />
             </button>
             <button className="text-white relative">
-              <Heart className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 bg-cyan-500 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                2
-              </span>
+              <Link href="/sources" className="text-white">
+                <Rss className="w-6 h-6" />
+              </Link>
             </button>
           </div>
         </div>
