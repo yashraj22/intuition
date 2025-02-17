@@ -4,7 +4,7 @@ import { toast } from "sonner";
 // import { mockFeedItems } from "../data/mockFeed";
 import { FeedItem, RssFeed } from "../types/feed";
 import FeedCard from "./FeedCard";
-import { Headphones, Rss, Plus } from "lucide-react";
+import { Settings2, Plus } from "lucide-react";
 // import { useRouter } from "next/navigation";
 import Modal from "react-modal";
 import Link from "next/link";
@@ -251,12 +251,9 @@ const Feed = () => {
             >
               <Plus className="w-5 h-5 text-white" />
             </button>
-            <button className="text-white">
-              <Headphones className="w-6 h-6" />
-            </button>
             <button className="text-white relative">
               <Link href="/sources" className="text-white">
-                <Rss className="w-6 h-6" />
+                <Settings2 className="w-6 h-6" />
               </Link>
             </button>
           </div>
