@@ -24,7 +24,7 @@ const Feed = () => {
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
 
-  const initialFeeds: RssFeed[] = [
+  const initialSources: RssFeed[] = [
     // Initial popular tech feeds
     { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
     {
@@ -47,6 +47,7 @@ const Feed = () => {
   const fetchRssFeedItems = async (feeds: RssFeed[]) => {
     const corsProxy = "https://api.allorigins.win/raw?url=";
     const newItems: FeedItem[] = [];
+    const storedFeed = JSON.parse(localStorage.getItem("Feed") || "[]"); // Add fallback empty array string
 
     for (const feed of feeds) {
       try {
@@ -67,6 +68,12 @@ const Feed = () => {
             item.querySelector("description")?.textContent || ""
           );
           const articleUrl = item.querySelector("link")?.textContent || "";
+
+          if (title == storedFeed[0]?.title) {
+            setItems(storedFeed);
+            setLoading(false);
+            return;
+          }
 
           // Try to get image from RSS feed first
           let imageUrl =
@@ -127,12 +134,14 @@ const Feed = () => {
       }
     }
     setItems(newItems);
+    localStorage.setItem("Feed", JSON.stringify([...newItems]));
     setLoading(false);
   };
 
   useEffect(() => {
-    const storedFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]"); // Add fallback empty array string
-    const feedsToFetch = storedFeeds.length > 0 ? storedFeeds : initialFeeds; // Use stored or initial
+    const storedSources = JSON.parse(localStorage.getItem("sources") || "[]"); // Add fallback empty array string
+    const feedsToFetch =
+      storedSources.length > 0 ? storedSources : initialSources; // Use stored or initial
     fetchRssFeedItems(feedsToFetch);
   }, []); // Empty dependency array ensures this runs only once on mount
 
@@ -143,7 +152,7 @@ const Feed = () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const newItems: FeedItem[] = [...initialFeeds].map((item) => ({
+    const newItems: FeedItem[] = [...initialSources].map((item) => ({
       id: `${parseInt(item.id) + items.length}`,
       title: item.name, // Assuming you want to use the name as the title
       description: "", // Provide a default description or modify as needed
@@ -219,28 +228,28 @@ const Feed = () => {
   };
 
   const handleAddFeed = () => {
-    const rssFeeds: RssFeed[] = JSON.parse(
-      localStorage.getItem("rssFeeds") || "[]"
+    const sources: RssFeed[] = JSON.parse(
+      localStorage.getItem("sources") || "[]"
     );
-    const newFeed = {
+    const newSource = {
       id: Date.now().toString() + Math.random(), // Add a unique ID to each feed
       name: "Custom Feed",
       url: newFeedUrl,
     };
 
     localStorage.setItem(
-      "rssFeeds",
-      JSON.stringify([...initialFeeds, ...rssFeeds, newFeed])
+      "sources",
+      JSON.stringify([...initialSources, ...sources, newSource])
     );
     toast.success("Feed added successfully. Refreshing feeds...");
 
     setItems([]);
-    fetchRssFeedItems([...rssFeeds, newFeed]); // Pass the updated feeds array
+    fetchRssFeedItems([...sources, newSource]); // Pass the updated feeds array
     closeRSSModal();
   };
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen w-[100vw]">
       <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-black/90 backdrop-blur-lg">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-white">Discover</h1>
@@ -254,7 +263,7 @@ const Feed = () => {
 
             {/* late night, commit, adding a button only */}
             <button className="text-white">
-              <Link href = '/saved' >
+              <Link href="/saved">
                 <Bookmark className="w-6 h-6" />
               </Link>
             </button>
@@ -288,21 +297,25 @@ const Feed = () => {
         ref={feedRef}
         className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-y-contain pt-28"
       >
-        {items.map((item, index) => (
-          <FeedCard
-            key={`${item.id}-${index}`}
-            item={item}
-            onSave={handleSave}
-            onShare={handleShare}
-          />
-        ))}
         {loading && (
           <div className="w-full h-[100dvh] flex items-center justify-center">
-            <div className="animate-float">
+            <div className="animate-float flex gap-4 items-center">
               <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-white items-center justify-center">
+                Please wait till we fetch some content.
+              </p>
             </div>
           </div>
         )}
+        {items &&
+          items.map((item, index) => (
+            <FeedCard
+              key={`${item.id}-${index}`}
+              item={item}
+              onSave={handleSave}
+              onShare={handleShare}
+            />
+          ))}
       </div>
 
       {/* Modal */}
