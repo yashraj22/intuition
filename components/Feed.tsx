@@ -69,7 +69,7 @@ const Feed = () => {
           );
           const articleUrl = item.querySelector("link")?.textContent || "";
 
-          if (title == storedFeed[0]?.title) {
+          if (title === storedFeed[0]?.title) {
             setItems(storedFeed);
             setLoading(false);
             return;
