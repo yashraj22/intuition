@@ -46,7 +46,7 @@ const Feed = () => {
 
   const fetchRssFeedItems = async (feeds: RssFeed[]) => {
     const corsProxy = "https://api.allorigins.win/raw?url=";
-    const newItems: FeedItem[] = [];
+    let newItems: FeedItem[] = [];
     const storedFeed = JSON.parse(localStorage.getItem("Feed") || "[]"); // Add fallback empty array string
 
     for (const feed of feeds) {
@@ -69,10 +69,17 @@ const Feed = () => {
           );
           const articleUrl = item.querySelector("link")?.textContent || "";
 
+          // Start displaying after at least 2 items fetched
+          if (newItems.length >= 2) {
+            setItems([...newItems]);
+          }
+
+          // Don't fetch if rest of the articles are already in local storage
           if (title === storedFeed[0]?.title) {
-            setItems(storedFeed);
+            setItems([...newItems, ...storedFeed]);
+            newItems = [...newItems, ...storedFeed];
             setLoading(false);
-            return;
+            break;
           }
 
           // Try to get image from RSS feed first
