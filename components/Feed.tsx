@@ -21,9 +21,11 @@ const Feed = () => {
     const [isUpdatingFeed, setIsUpdatingFeed] = useState(false); // Separate loading state for background updates
 
 
+
     useEffect(() => {
         const fetchInitialFeed = async () => {
             setLoading(true); // Start loading for initial database fetch
+
             try {
                 const response = await fetch("/api/get-feed");
                 if (!response.ok) {
@@ -43,7 +45,9 @@ const Feed = () => {
     }, []);
 
 
+
     const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
+
 
     const initialSources: RssFeed[] = [
         { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
@@ -58,6 +62,7 @@ const Feed = () => {
             name: "NASA News",
         },
     ];
+
 
     const parseHtmlContent = (html: string): string => {
         const doc = new DOMParser().parseFromString(html, "text/html");
@@ -319,6 +324,7 @@ const Feed = () => {
                 )}
 
 
+
                 {/* {isUpdatingFeed && !loading && ( // Updating indicator, not shown during initial load
                     <div className="fixed top-24 right-4 z-50 bg-black/70 backdrop-blur-md text-white p-3 rounded-md text-sm">
                         Updating feed in background...
@@ -341,6 +347,7 @@ const Feed = () => {
                     </div>
                 )}
             </div>
+
 
 
             <Modal
