@@ -16,11 +16,13 @@ datasource db {
 model FeedItem {
   id          String   @id @default(cuid())
   title       String
-  description String
+  description String?
+  url         String   @unique
   imageUrl    String?
+  author      String?
   saved       Boolean  @default(false)
-  author      String
-  url         String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([url])
 }
