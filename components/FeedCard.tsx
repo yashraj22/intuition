@@ -3,20 +3,29 @@ import { useState } from "react";
 import { Bookmark, Share } from "lucide-react";
 import { FeedItem } from "../types/feed";
 import { cn } from "@/lib/utils";
+import Image from 'next/image'
+import { useSavedStore } from "@/store/useSavedStore";
 
 interface FeedCardProps {
   item: FeedItem;
-  onSave: (id: string) => void;
+  // onSave: (id: string) => void; now zustand will handle this bad boy.
   onShare: (id: string) => void;
 }
 
-const FeedCard = ({ item, onSave, onShare }: FeedCardProps) => {
+
+
+const FeedCard = ({ item, onShare }: FeedCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+
+
+
+  const {toggleSavedItem,isItemSaved} = useSavedStore();
+  const isSaved = isItemSaved(item.id);
 
   return (
     <div className="relative w-full h-[calc(100vh-7rem)] snap-center rounded-3xl overflow-hidden mx-auto max-w-md mb-4">
       {/* Image */}
-      <img
+      {/* <img
         src={item.imageUrl}
         alt={item.title}
         className={cn(
@@ -25,7 +34,22 @@ const FeedCard = ({ item, onSave, onShare }: FeedCardProps) => {
         )}
         onLoad={() => setImageLoaded(true)}
         loading="lazy"
+      /> */}
+
+      <Image
+        src={item.imageUrl || '/default-image.jpg'}
+        alt = {item.title}
+        width={500}
+        height={500}
+        className={cn(
+          "w-full h-full object-cover transition-opacity duration-500",
+          imageLoaded ? "opacity-100" : "opacity-0"
+        )}
+        onLoad={() => setImageLoaded(true)}
+        loading="lazy"
       />
+
+     
 
       {/* Content overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/50 to-transparent rounded-b-3xl">
@@ -50,13 +74,13 @@ const FeedCard = ({ item, onSave, onShare }: FeedCardProps) => {
           {/* Action buttons */}
           <div className="flex gap-3">
             <button
-              onClick={() => onSave(item.id)}
+              onClick={() => toggleSavedItem(item)}
               className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center"
             >
               <Bookmark
                 className={cn(
                   "w-5 h-5 transition-colors duration-300",
-                  item.saved ? "fill-white text-white" : "text-white"
+                  isSaved ? "fill-white text-white" : "text-white"
                 )}
               />
             </button>
