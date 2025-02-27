@@ -81,7 +81,8 @@ const Feed = () => {
         const parser = new DOMParser();
         const xml = parser.parseFromString(data, "text/xml");
 
-        const xmlItems = xml.querySelectorAll("item");
+        const xmlItems =
+          xml.querySelectorAll("item") || xml.querySelectorAll("entry");
         for (const item of xmlItems) {
           const title = item.querySelector("title")?.textContent || "";
           const articleUrl = item.querySelector("link")?.textContent || "";
@@ -108,19 +109,9 @@ const Feed = () => {
                   "text/html"
                 );
 
-                imageUrl =
-                  articleDoc
-                    .querySelector('meta[property="og:image"]')
-                    ?.getAttribute("content") ||
-                  articleDoc
-                    .querySelector('meta[name="twitter:image"]')
-                    ?.getAttribute("content") ||
-                  articleDoc
-                    .querySelector('meta[property="twitter:image"]')
-                    ?.getAttribute("content") ||
-                  articleDoc
-                    .querySelector('link[rel="image_src"]')
-                    ?.getAttribute("href");
+                imageUrl = articleDoc
+                  .querySelector('meta[property="og:image"]')
+                  ?.getAttribute("content");
               } catch (error) {
                 console.error("Error fetching article metadata:", error);
               }
@@ -136,7 +127,9 @@ const Feed = () => {
               id: articleUrl || title.toLowerCase().replace(/\s+/g, "-"),
               title,
               description: parseHtmlContent(
-                item.querySelector("description")?.textContent || ""
+                item.querySelector("description")?.textContent ||
+                  item.querySelector("summary")?.textContent ||
+                  ""
               ),
               imageUrl,
               saved: false,
@@ -152,6 +145,13 @@ const Feed = () => {
     }
 
     // Save only NEW fetched items to the database
+    saveFeed(newItems);
+
+    setIsUpdatingFeed(false);
+    return [];
+  };
+
+  const saveFeed = async (newItems: FeedItem[]) => {
     if (newItems.length > 0) {
       try {
         const saveResponse = await fetch("/api/save-feed", {
@@ -192,8 +192,6 @@ const Feed = () => {
         toast.error("Error updating feed with new articles.");
       }
     }
-    setIsUpdatingFeed(false);
-    return [];
   };
 
   useEffect(() => {
@@ -383,13 +381,20 @@ const Feed = () => {
           placeholder="Enter RSS Feed URL"
           className="w-full px-3 py-2 border rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={handleAddFeed}
-            className="bg-cyan-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          >
-            Add
-          </button>
+        <div className="mt-5 flex-col items-center justify-center">
+          <div className="mt-4 mb-4 flex justify-center">
+            <button
+              onClick={handleAddFeed}
+              className="bg-cyan-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              Add
+            </button>
+            <select style={{ color: "black" }}>
+              <option>Blog</option>
+              <option>Youtube</option>
+              <option>Podcast</option>
+            </select>
+          </div>
           <button
             onClick={closeRSSModal}
             className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
