@@ -52,7 +52,7 @@ const FeedCard = ({ item, onShare }: FeedCardProps) => {
      
 
       {/* Content overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/50 to-transparent rounded-b-3xl">
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/100 via-gray-700/80 to-transparent backdrop-blur-md rounded-b-3xl">
         <h2 className="text-2xl font-semibold text-white mb-2 line-clamp-2">
           {item.title}
         </h2>

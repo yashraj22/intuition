@@ -36,11 +36,11 @@ export default function SavedPost() {
                 />
 
                 {/* Content overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/50 to-transparent rounded-b-[10px]">
-                  <h2 className="text-xl font-semibold text-white mb-2 line-clamp-2">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/100 via-gray-700/90 to-transparent backdrop-blur-md rounded-b-3x rounded-b-[10px]">
+                  <h2 className="text-md font-semibold text-white mb-2 line-clamp-2">
                     {item.title}
                   </h2>
-                  <p className="text-white/80 text-sm mb-4 line-clamp-3">
+                  <p className="text-white/80 text-xs mb-4 line-clamp-3">
                     {item.description}
                   </p>
 
