@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { RssFeed } from "../../types/feed";
+import { Source } from "../../types/feed";
 import { Trash2, Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 const SourcesPage = () => {
-  const [feeds, setFeeds] = useState<RssFeed[]>([]);
+  const [feeds, setFeeds] = useState<Source[]>([]);
   const [newFeedUrl, setNewFeedUrl] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
 

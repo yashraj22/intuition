@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { FeedItem, RssFeed } from "../types/feed";
+import { FeedItem, Source } from "../types/feed";
 import FeedCard from "./FeedCard";
 import { Settings2, Plus, Bookmark } from "lucide-react";
 import Modal from "react-modal";
@@ -27,16 +27,16 @@ const Feed = () => {
       try {
         const response = await fetch("/api/get-feed");
         if (!response.ok) {
-          throw new Error("Failed to fetch initial feed items from database");
+          throw new Error("Failed to fetch initial source items from database");
         }
         const data = await response.json();
         setItems(data.data);
       } catch (error) {
         console.error(
-          "Error fetching initial feed items from database:",
+          "Error fetching initial source items from database:",
           error
         );
-        toast.error("Failed to load initial feed data.");
+        toast.error("Failed to load initial source data.");
       } finally {
         setLoading(false); // End loading after initial DB fetch attempt
       }
@@ -47,7 +47,7 @@ const Feed = () => {
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
 
-  const initialSources: RssFeed[] = [
+  const initialSources: Source[] = [
     { id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
     {
       id: "2",
@@ -66,81 +66,92 @@ const Feed = () => {
     return doc.body.textContent || "";
   };
 
-  const fetchRssFeedItems = async (feeds: RssFeed[]) => {
+  const fetchRssItems = async (source: Source) => {
+    const corsProxy = "https://api.allorigins.win/raw?url=";
+    const fetchedItems: FeedItem[] = [];
+
+    try {
+      const response = await fetch(corsProxy + encodeURIComponent(source.url));
+      if (!response.ok) throw new Error(`Failed to fetch ${source.url}`);
+
+      const data = await response.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data, "text/xml");
+
+      const xmlItems =
+        xml.querySelectorAll("item") || xml.querySelectorAll("entry");
+      for (const item of xmlItems) {
+        const title = item.querySelector("title")?.textContent || "";
+        const articleUrl = item.querySelector("link")?.textContent || "";
+
+        // Check if this item already exists in the current state
+        const isDuplicate = items.some(
+          (existingItem: FeedItem) =>
+            existingItem.url === articleUrl || existingItem.title === title
+        );
+
+        if (!isDuplicate) {
+          let imageUrl =
+            item.querySelector("enclosure")?.getAttribute("url") ||
+            item.querySelector("media\\:content")?.getAttribute("url");
+
+          if (!imageUrl && articleUrl) {
+            try {
+              const articleResponse = await fetch(
+                corsProxy + encodeURIComponent(articleUrl)
+              );
+              const articleHtml = await articleResponse.text();
+              const articleDoc = parser.parseFromString(
+                articleHtml,
+                "text/html"
+              );
+
+              imageUrl = articleDoc
+                .querySelector('meta[property="og:image"]')
+                ?.getAttribute("content");
+            } catch (error) {
+              console.error("Error fetching article metadata:", error);
+            }
+          }
+
+          if (!imageUrl) {
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
+              title
+            )}`;
+          }
+
+          fetchedItems.push({
+            id: articleUrl || title.toLowerCase().replace(/\s+/g, "-"),
+            title,
+            description: parseHtmlContent(
+              item.querySelector("description")?.textContent ||
+                item.querySelector("summary")?.textContent ||
+                ""
+            ),
+            imageUrl,
+            saved: false,
+            author: item.querySelector("author")?.textContent || source.name,
+            url: articleUrl,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching source:", error);
+      toast.error(`Failed to fetch source: ${source.url}`);
+    } finally {
+      return fetchedItems;
+    }
+  };
+
+  const fetchSources = async (sources: Source[]) => {
     if (isUpdatingFeed) return; // Prevent concurrent updates
     setIsUpdatingFeed(true);
-    const corsProxy = "https://api.allorigins.win/raw?url=";
     const newItems: FeedItem[] = [];
 
-    for (const feed of feeds) {
-      try {
-        const response = await fetch(corsProxy + encodeURIComponent(feed.url));
-        if (!response.ok) throw new Error(`Failed to fetch ${feed.url}`);
-
-        const data = await response.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(data, "text/xml");
-
-        const xmlItems =
-          xml.querySelectorAll("item") || xml.querySelectorAll("entry");
-        for (const item of xmlItems) {
-          const title = item.querySelector("title")?.textContent || "";
-          const articleUrl = item.querySelector("link")?.textContent || "";
-
-          // Check if this item already exists in the current state
-          const isDuplicate = items.some(
-            (existingItem: FeedItem) =>
-              existingItem.url === articleUrl || existingItem.title === title
-          );
-
-          if (!isDuplicate) {
-            let imageUrl =
-              item.querySelector("enclosure")?.getAttribute("url") ||
-              item.querySelector("media\\:content")?.getAttribute("url");
-
-            if (!imageUrl && articleUrl) {
-              try {
-                const articleResponse = await fetch(
-                  corsProxy + encodeURIComponent(articleUrl)
-                );
-                const articleHtml = await articleResponse.text();
-                const articleDoc = parser.parseFromString(
-                  articleHtml,
-                  "text/html"
-                );
-
-                imageUrl = articleDoc
-                  .querySelector('meta[property="og:image"]')
-                  ?.getAttribute("content");
-              } catch (error) {
-                console.error("Error fetching article metadata:", error);
-              }
-            }
-
-            if (!imageUrl) {
-              imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-                title
-              )}`;
-            }
-
-            newItems.push({
-              id: articleUrl || title.toLowerCase().replace(/\s+/g, "-"),
-              title,
-              description: parseHtmlContent(
-                item.querySelector("description")?.textContent ||
-                  item.querySelector("summary")?.textContent ||
-                  ""
-              ),
-              imageUrl,
-              saved: false,
-              author: item.querySelector("author")?.textContent || feed.name,
-              url: articleUrl,
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching RSS feed:", error);
-        toast.error(`Failed to fetch feed: ${feed.url}`);
+    for (const source of sources) {
+      if (source.url.match(/(feed|rss|\.xml|atom)/i)) {
+        const fetchedItems = await fetchRssItems(source);
+        newItems.push(...fetchedItems);
       }
     }
 
@@ -163,11 +174,11 @@ const Feed = () => {
         });
 
         if (!saveResponse.ok) {
-          throw new Error("Failed to save new feed items to the database");
+          throw new Error("Failed to save new source items to the database");
         }
 
         const saveResult = await saveResponse.json();
-        console.log("New feed items saved to database:", saveResult);
+        console.log("New source items saved to database:", saveResult);
 
         // Update state with only the newly saved items
         if (saveResult.data && saveResult.data.length > 0) {
@@ -188,8 +199,8 @@ const Feed = () => {
           });
         }
       } catch (error) {
-        console.error("Error saving new feed items to database:", error);
-        toast.error("Error updating feed with new articles.");
+        console.error("Error saving new source items to database:", error);
+        toast.error("Error updating source with new articles.");
       }
     }
   };
@@ -201,7 +212,7 @@ const Feed = () => {
         storedSources.length > 0 ? storedSources : initialSources;
 
       if (!loading) {
-        await fetchRssFeedItems(feedsToFetch);
+        await fetchSources(feedsToFetch);
       }
     };
 
@@ -213,15 +224,6 @@ const Feed = () => {
 
     return () => clearInterval(intervalId);
   }, [loading]);
-
-  const handleSave = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, saved: !item.saved } : item
-      )
-    );
-    toast.success("Item saved successfully");
-  };
 
   const handleShare = async (id: string) => {
     if (typeof window === "undefined") return;
@@ -255,7 +257,7 @@ const Feed = () => {
   };
 
   const handleAddFeed = () => {
-    const sources: RssFeed[] = JSON.parse(
+    const sources: Source[] = JSON.parse(
       localStorage.getItem("sources") || "[]"
     );
     const newSource = {
@@ -268,7 +270,7 @@ const Feed = () => {
     toast.success("Feed added successfully. Refreshing feeds...");
 
     setItems([]); // Clear existing items to force refresh
-    fetchRssFeedItems([...sources, newSource]);
+    fetchSources([...sources, newSource]);
     closeRSSModal();
   };
 
@@ -329,7 +331,7 @@ const Feed = () => {
 
         {/* {isUpdatingFeed && !loading && ( // Updating indicator, not shown during initial load
                     <div className="fixed top-24 right-4 z-50 bg-black/70 backdrop-blur-md text-white p-3 rounded-md text-sm">
-                        Updating feed in background...
+                        Updating source in background...
                     </div>
                 )} */}
 
@@ -338,7 +340,6 @@ const Feed = () => {
             <FeedCard
               key={`${item.id}-${index}`}
               item={item}
-              onSave={handleSave}
               onShare={handleShare}
             />
           ))}
@@ -346,7 +347,7 @@ const Feed = () => {
           items.length === 0 &&
           !isUpdatingFeed && ( // Show message if no items after initial load and no update in progress
             <div className="w-full h-[100dvh] flex items-center justify-center text-white/60">
-              <p>No feed items available. Add RSS feeds to get started.</p>
+              <p>No source items available. Add RSS feeds to get started.</p>
             </div>
           )}
       </div>

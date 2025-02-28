@@ -9,7 +9,7 @@ export interface FeedItem {
   author: string;
 }
 
-export interface RssFeed {
+export interface Source {
   id: string; // Add id property
   url: string;
   name: string;
