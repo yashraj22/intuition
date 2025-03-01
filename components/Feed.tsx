@@ -77,13 +77,16 @@ const Feed = () => {
       const data = await response.text();
       const parser = new DOMParser();
       const xml = parser.parseFromString(data, "text/xml");
+      const xmlItems = xml.querySelectorAll("item").length
+        ? xml.querySelectorAll("item")
+        : xml.querySelectorAll("entry");
 
-      const xmlItems =
-        xml.querySelectorAll("item") || xml.querySelectorAll("entry");
       for (const item of xmlItems) {
         const title = item.querySelector("title")?.textContent || "";
-        const articleUrl = item.querySelector("link")?.textContent || "";
-
+        const articleUrl =
+          item.querySelector("link")?.textContent ||
+          item.querySelector("link")?.getAttribute("href") ||
+          "";
         // Check if this item already exists in the current state
         const isDuplicate = items.some(
           (existingItem: FeedItem) =>
@@ -219,8 +222,8 @@ const Feed = () => {
     // Initial fetch when component mounts
     performPeriodicFeedUpdate();
 
-    // Set up interval with a longer delay (e.g., 5 minutes = 300000ms)
-    const intervalId = setInterval(performPeriodicFeedUpdate, 120000);
+    // Set up interval with a longer delay (e.g., 30 minutes = 1800000ms)
+    const intervalId = setInterval(performPeriodicFeedUpdate, 1800000);
 
     return () => clearInterval(intervalId);
   }, [loading]);
