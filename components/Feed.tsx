@@ -18,6 +18,7 @@ const Feed = () => {
   const [loading, setLoading] = useState(true); // Initial loading state for initial DB fetch
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFeedUrl, setNewFeedUrl] = useState("");
+  const [newFeedName, setNewFeedName] = useState("");
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false); // Separate loading state for background updates
 
   useEffect(() => {
@@ -43,6 +44,13 @@ const Feed = () => {
     };
 
     fetchInitialFeed();
+  }, []);
+
+  useEffect(() => {
+    const storedSources = JSON.parse(localStorage.getItem("sources") || "[]");
+    if (storedSources.length === 0) {
+      localStorage.setItem("sources", JSON.stringify(initialSources));
+    }
   }, []);
 
   const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
@@ -92,12 +100,22 @@ const Feed = () => {
           (existingItem: FeedItem) =>
             existingItem.url === articleUrl || existingItem.title === title
         );
-
+        console.log("isDuplicate", !isDuplicate);
         if (!isDuplicate) {
-          let imageUrl =
-            item.querySelector("enclosure")?.getAttribute("url") ||
-            item.querySelector("media\\:content")?.getAttribute("url");
+          let imageUrl = "";
 
+          // Handling XML Namespace
+          const mediaGroup =
+            item.getElementsByTagName("media:group")[0] ||
+            item.getElementsByTagName("media")[0];
+          if (mediaGroup) {
+            const thumbnail =
+              mediaGroup.getElementsByTagName("media:thumbnail")[0];
+            if (thumbnail) {
+              imageUrl = thumbnail.getAttribute("url") || "";
+            }
+          }
+          console.log("imageUrl", imageUrl);
           if (!imageUrl && articleUrl) {
             try {
               const articleResponse = await fetch(
@@ -109,9 +127,10 @@ const Feed = () => {
                 "text/html"
               );
 
-              imageUrl = articleDoc
-                .querySelector('meta[property="og:image"]')
-                ?.getAttribute("content");
+              imageUrl =
+                articleDoc
+                  .querySelector('meta[property="og:image"]')
+                  ?.getAttribute("content") || "";
             } catch (error) {
               console.error("Error fetching article metadata:", error);
             }
@@ -129,11 +148,14 @@ const Feed = () => {
             description: parseHtmlContent(
               item.querySelector("description")?.textContent ||
                 item.querySelector("summary")?.textContent ||
+                item.querySelector("media\\:description")?.textContent ||
                 ""
             ),
             imageUrl,
             saved: false,
-            author: item.querySelector("author")?.textContent || source.name,
+            author:
+              item.querySelector("author")?.getElementsByTagName("name")[0]
+                .textContent || source.name,
             url: articleUrl,
           });
         }
@@ -259,15 +281,33 @@ const Feed = () => {
     setNewFeedUrl("");
   };
 
-  const handleAddFeed = () => {
+  const handleAddFeed = async () => {
     const sources: Source[] = JSON.parse(
       localStorage.getItem("sources") || "[]"
     );
     const newSource = {
-      id: Date.now().toString() + Math.random(),
-      name: "Custom Feed",
+      id: (sources.length + 1).toString(),
+      name: newFeedName,
       url: newFeedUrl,
     };
+
+    if (
+      newFeedUrl.match(
+        /^https?:\/\/www\.youtube\.com\/(@|channel\/UC[\w-]{21}|[\w@-]+)(?:\?app=desktop)?$/
+      )
+    ) {
+      const corsProxy = "https://api.allorigins.win/raw?url=";
+      const response = await fetch(corsProxy + encodeURIComponent(newFeedUrl));
+      const data = await response.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data, "text/html");
+      const rssUrl = xml
+        .querySelector('link[type="application/rss+xml"]')
+        ?.getAttribute("href");
+      if (rssUrl) {
+        newSource.url = rssUrl;
+      }
+    }
 
     localStorage.setItem("sources", JSON.stringify([...sources, newSource]));
     toast.success("Feed added successfully. Refreshing feeds...");
@@ -383,6 +423,13 @@ const Feed = () => {
           value={newFeedUrl}
           onChange={(e) => setNewFeedUrl(e.target.value)}
           placeholder="Enter RSS Feed URL"
+          className="w-full px-3 py-2 border rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-2"
+        />
+        <input
+          type="text"
+          value={newFeedName}
+          onChange={(e) => setNewFeedName(e.target.value)}
+          placeholder="Enter RSS Feed Name"
           className="w-full px-3 py-2 border rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
         <div className="mt-5 flex-col items-center justify-center">
