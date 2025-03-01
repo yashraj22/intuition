@@ -1,9 +1,10 @@
+
 import { create } from "zustand";
-import { FeedItem } from "@/types/feed"; // Import the FeedItem type
+import { SavedItem } from "@/types/feed"; // Import the FeedItem type
 
 interface SavedStore {
-  savedItems: FeedItem[]; // Store FeedItem objects instead of strings
-  toggleSavedItem: (item: FeedItem) => void; // Accept a FeedItem object
+  savedItems: SavedItem[]; // Store FeedItem objects instead of strings
+  toggleSavedItem: (item: SavedItem) => void; // Accept a FeedItem object
   isItemSaved: (id: string) => boolean; // Check if an item is saved by ID
 }
 

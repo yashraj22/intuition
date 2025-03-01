@@ -1,0 +1,25 @@
+<svg width="300" height="200" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="200" fill="transparent"/>
+  
+  <!-- Floating Paper -->
+  <rect x="60" y="40" width="180" height="120" rx="12" fill="white" stroke="#D1D5DB" stroke-width="2" filter="url(#shadow)"/>
+  
+  <!-- Header Line -->
+  <rect x="80" y="60" width="140" height="10" rx="5" fill="#E5E7EB"/>
+  
+  <!-- Content Lines -->
+  <rect x="80" y="80" width="120" height="8" rx="4" fill="#E5E7EB"/>
+  <rect x="80" y="95" width="100" height="8" rx="4" fill="#E5E7EB"/>
+  <rect x="80" y="110" width="80" height="8" rx="4" fill="#E5E7EB"/>
+  
+  <!-- Illustration Elements -->
+  <circle cx="200" cy="130" r="12" fill="#6366F1" opacity="0.2"/>
+  <circle cx="220" cy="90" r="8" fill="#10B981" opacity="0.2"/>
+  
+  <!-- Shadow Effect -->
+  <defs>
+    <filter id="shadow" x="0" y="0" width="300" height="200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+</svg>

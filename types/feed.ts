@@ -14,3 +14,11 @@ export interface Source {
   url: string;
   name: string;
 }
+
+
+
+//type for the save item, it will be exactly the same as the FeedItem, this is 
+/// for distinguish the FeedItem from the saved item
+
+// Interface for saved items, extending FeedItem to distinguish from regular feed items
+export interface SavedItem extends FeedItem {}
