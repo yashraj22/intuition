@@ -9,19 +9,17 @@ export default function SavedPost() {
   const { savedItems, toggleSavedItem, isItemSaved } = useSavedStore();
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-black text-white min-h-screen">
       {savedItems.length === 0 ? (
-       
-          <div className="flex flex-col justify-center items-center h-[calc(100vh-7rem)]">
-            <h1 className="text-gray-400 text-xl ">No Saved Posts here.</h1>
-            <Image
-              src="/emptypage.svg"
-              width={500}
-              height={500}
-              alt="nothing is here"
-            />
-          </div>
-      
+        <div className="flex flex-col justify-center items-center h-[calc(100vh-7rem)]">
+          <h1 className="text-gray-400 text-xl ">No Saved Posts here.</h1>
+          <Image
+            src="/emptypage.svg"
+            width={500}
+            height={500}
+            alt="nothing is here"
+          />
+        </div>
       ) : (
         // <p className="text-center text-gray-500">No saved posts yet.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
