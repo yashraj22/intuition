@@ -343,7 +343,7 @@ const Feed = () => {
                 <Settings2 className="w-6 h-6" />
               </Link>
             </button>
-            {status === "authenticated" ? <SignIn /> : <SignOut />}
+            {status === "authenticated" ? <SignOut /> : <SignIn />}
           </div>
         </div>
 
