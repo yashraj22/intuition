@@ -6,6 +6,9 @@ import FeedCard from "./FeedCard";
 import { Settings2, Plus, Bookmark } from "lucide-react";
 import Modal from "react-modal";
 import Link from "next/link";
+import SignIn from "@/components/sign-in";
+import { useSession } from "next-auth/react";
+import SignOut from "./sign-out";
 
 if (typeof window !== "undefined") {
   Modal.setAppElement("body");
@@ -20,6 +23,7 @@ const Feed = () => {
   const [newFeedUrl, setNewFeedUrl] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false); // Separate loading state for background updates
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const fetchInitialFeed = async () => {
@@ -324,7 +328,7 @@ const Feed = () => {
           <h1 className="text-3xl font-bold text-white">Discover</h1>
           <div className="flex gap-4">
             <button
-              className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center"
+              className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center"
               onClick={openRSSModal}
             >
               <Plus className="w-5 h-5 text-white" />
@@ -339,6 +343,7 @@ const Feed = () => {
                 <Settings2 className="w-6 h-6" />
               </Link>
             </button>
+            {status === "authenticated" ? <SignIn /> : <SignOut />}
           </div>
         </div>
 
