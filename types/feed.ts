@@ -21,4 +21,4 @@ export interface Source {
 /// for distinguish the FeedItem from the saved item
 
 // Interface for saved items, extending FeedItem to distinguish from regular feed items
-export interface SavedItem extends FeedItem {}
+export type SavedItem = FeedItem

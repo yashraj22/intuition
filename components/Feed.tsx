@@ -10,6 +10,7 @@ import SignIn from "@/components/sign-in";
 import { useSession } from "next-auth/react";
 import SignOut from "./sign-out";
 
+
 if (typeof window !== "undefined") {
   Modal.setAppElement("body");
 }

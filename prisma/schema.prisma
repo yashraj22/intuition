@@ -23,13 +23,27 @@ model FeedItem {
   saved       Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  Saved       Saved[]
 
   @@index([url])
 }
 
 model User {
-  id       String    @id @default(cuid()) 
-  email    String    @unique
-  name     String
-  image    String?
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  image     String?
+  createdAt DateTime @default(now())
+  Saved     Saved[]
+}
+
+model Saved {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  feedItem   FeedItem @relation(fields: [feedItemId], references: [id])
+  feedItemId String
+  createdAt  DateTime @default(now())
+
+  @@index([userId, feedItemId], name: "unique_saved")
 }
