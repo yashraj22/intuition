@@ -4,6 +4,8 @@ import { auth } from "@/auth"; // Adjust the path to your auth.ts
 import prisma from '@/lib/prisma';
 
 
+
+
 export async function GET() {
   const session = await auth();
   const userId = session?.user?.id;
@@ -47,5 +49,31 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Post saved successfully!", { status: 201 });
   } catch (error) {
     console.error("Error creating message:", error);
+  }
+}
+
+
+
+export async function DELETE(req: NextRequest) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  try {
+    const body = await req.json();
+    const { itemId } = body;
+
+    await prisma.saved.delete({
+      where: {
+        id: itemId, // Use itemId to delete the specific saved item
+        userId: userId,
+      },
+    });
+
+    return new NextResponse("Post Deleted successfully!", { status: 200 });
+  } catch (error) {
+    console.error("Error Deleting post", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to delete saved item" },
+      { status: 500 }
+    );
   }
 }
