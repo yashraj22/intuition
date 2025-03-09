@@ -68,7 +68,9 @@ export async function DELETE(req: NextRequest) {
       },
     });
 
-    return new NextResponse("Post Deleted successfully!", { status: 200 });
+    return NextResponse.json({ success: true, message:"Post Deleted successfully!"}, { status: 200 }
+      
+    );
   } catch (error) {
     console.error("Error Deleting post", error);
     return NextResponse.json(

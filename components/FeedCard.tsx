@@ -18,7 +18,7 @@ const FeedCard = ({ item, onShare }: FeedCardProps) => {
 
 	const { toggleSavedItem, isItemSaved } = useSavedStore();
 	const isSaved = isItemSaved(item.id);
-	const { status, data: session } = useSession();
+	const { data: session } = useSession();
 
 	const handleSave = () => {
 		const userId = session?.user?.id || "anonymous";

@@ -324,11 +324,11 @@ const Feed = () => {
 			<header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-black/90 backdrop-blur-lg">
 				<div className="flex items-center justify-between mb-4">
 					<h1 className="text-3xl font-bold text-white">Discover</h1>
-					<div className="flex gap-4">
+					<div className="flex gap-3">
 						<button
-							className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center"
+							className="w-7 h-7 rounded-full bg-cyan-500 flex items-center justify-center mt-[4%]"
 							onClick={openRSSModal}>
-							<Plus className="w-5 h-5 text-white" />
+							<Plus className="w-5 h-5 text-white " />
 						</button>
 						<button className="text-white">
 							<Link href="/saved">
