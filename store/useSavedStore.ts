@@ -6,6 +6,7 @@ interface SavedStore {
 	toggleSavedItem: (item: SavedItem, userId: string | undefined) => void; // Accept a FeedItem object
 	isItemSaved: (id: string) => boolean; // Check if an item is saved by ID
 	fetchSavedPost: () => void;
+    deleteSavedPost: (itemId: string) => void; // Added userId parameter
 }
 
 export const useSavedStore = create<SavedStore>((set, get) => ({
@@ -13,6 +14,9 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 
 	// Toggle saved item
 	toggleSavedItem: async (item: SavedItem, userId: string | undefined) => {
+
+			
+
 		const isSaved = get().savedItems.some(
 			(savedItem) => savedItem.id === item.id,
 		);
@@ -59,10 +63,42 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
         }
     },
 
+	deleteSavedPost: async ( itemId : string ) => {
+		try{
+	
+			console.log("this is item id in the saved store file.", itemId);
+			const response = await fetch("/api/saved", {
+				method :"DELETE",
+				headers : {
+					"Content-Type" : "application/json",
+				},
+				body : JSON.stringify ({itemId: itemId}),
+			})
+	
+			if(!response.ok){
+				throw new Error(`HTTP ERROR ${response.status}`)
+			}
+	
+			set((state) => ({
+				savedItems: state.savedItems.filter((item) => item.id != itemId),
+			}));
+	
+			const data = await response.json();
+	
+			console.log("Deleted item respose", data);
+		}
+		catch(error){
+			console.error("Error deleting",error);
+		}
+	},
+
+
+
+
 
 
 	// Check if an item is saved
 	isItemSaved: (id) => {
 		return get().savedItems.some((item) => item.id === id);
-	},
+	  },
 }));
