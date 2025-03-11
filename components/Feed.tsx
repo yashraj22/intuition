@@ -9,6 +9,8 @@ import Link from "next/link";
 import SignIn from "@/components/sign-in";
 import { useSession } from "next-auth/react";
 import SignOut from "./sign-out";
+import { useFeedStore } from "@/store/useFeedStore";
+import { useSavedStore } from "@/store/useSavedStore";
 
 if (typeof window !== "undefined") {
 	Modal.setAppElement("body");
@@ -18,36 +20,23 @@ const Feed = () => {
 	const [items, setItems] = useState<FeedItem[]>([]);
 	const [activeCategory, setActiveCategory] = useState("Top Stories");
 	const feedRef = useRef<HTMLDivElement>(null);
-	const [loading, setLoading] = useState(true); // Initial loading state for initial DB fetch
+	// const [loading, setLoading] = useState(true); // Initial loading state for initial DB fetch
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [newFeedUrl, setNewFeedUrl] = useState("");
 	const [newFeedName, setNewFeedName] = useState("");
 	const [isUpdatingFeed, setIsUpdatingFeed] = useState(false); // Separate loading state for background updates
-	const { status } = useSession();
+	const { status, data: session } = useSession();
+	const { feedItems, loading, fetchFeedItems } = useFeedStore();
+	const { fetchSavedPost } = useSavedStore();
 
 	useEffect(() => {
-		const fetchInitialFeed = async () => {
-			setLoading(true); // Start loading for initial database fetch
-
-			try {
-				const response = await fetch("/api/get-feed");
-				if (!response.ok) {
-					throw new Error("Failed to fetch initial source items from database");
-				}
-				const data = await response.json();
-				setItems(data.data);
-			} catch (error) {
-				console.error(
-					"Error fetching initial source items from database:",
-					error,
-				);
-				toast.error("Failed to load initial source data.");
-			} finally {
-				setLoading(false); // End loading after initial DB fetch attempt
-			}
-		};
-
-		fetchInitialFeed();
+		// if (session?.user?.id) {
+		// 	const userId = session.user.id;
+		// 	console.log("Fetching saved posts for user:", userId);
+		// 	fetchSavedPost();
+		// }
+		fetchSavedPost();
+		fetchFeedItems();
 	}, []);
 
 	useEffect(() => {
@@ -60,14 +49,12 @@ const Feed = () => {
 	const categories = ["Top Stories", "Tech & Science", "Finance", "Art"];
 
 	const initialSources: Source[] = [
-		{ id: "1", url: "https://techcrunch.com/feed/", name: "TechCrunch" },
+		{ url: "https://techcrunch.com/feed/", name: "TechCrunch" },
 		{
-			id: "2",
 			url: "https://www.theverge.com/rss/index.xml",
 			name: "The Verge",
 		},
 		{
-			id: "3",
 			url: "https://www.nasa.gov/rss/dyn/breaking_news.rss",
 			name: "NASA News",
 		},
@@ -288,7 +275,7 @@ const Feed = () => {
 			localStorage.getItem("sources") || "[]",
 		);
 		const newSource = {
-			id: (sources.length + 1).toString(),
+			// id: (sources.length + 1).toString(),
 			name: newFeedName,
 			url: newFeedUrl,
 		};
@@ -315,7 +302,7 @@ const Feed = () => {
 		toast.success("Feed added successfully. Refreshing feeds...");
 
 		setItems([]); // Clear existing items to force refresh
-		fetchSources([...sources, newSource]);
+		// fetchSources([...sources, newSource]);
 		closeRSSModal();
 	};
 
@@ -380,8 +367,8 @@ const Feed = () => {
                     </div>
                 )} */}
 
-				{items &&
-					items.map((item, index) => (
+				{feedItems &&
+					feedItems.map((item, index) => (
 						<FeedCard
 							key={`${item.id}-${index}`}
 							item={item}
