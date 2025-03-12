@@ -41,7 +41,6 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 
 				const data = await response.json();
 
-				console.log("Data", data);
 				const savedItem = {
 					...data.data,
 					// id: item.id, // This will need to be updated with the ID from the API response
@@ -72,9 +71,7 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 	},
 
 	deleteSavedPost: async (itemId: string) => {
-		console.log(itemId);
 		try {
-			console.log("this is item id in the saved store file.", itemId);
 			const response = await fetch("/api/saved", {
 				method: "DELETE",
 				headers: {
@@ -92,8 +89,6 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 			}));
 
 			const data = await response.json();
-
-			console.log("Deleted item respose", data);
 		} catch (error) {
 			console.error("Error deleting", error);
 		}
@@ -101,10 +96,7 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 
 	// Check if an item is saved
 	isItemSaved: (id) => {
-		console.log(
-			"isItemSaved called with id:",
-			get().savedItems.map((item) => item.feedItem),
-		);
+
 		return get().savedItems.some((item) => item.feedItem.id === id);
 		// return !!get().savedItems[id];
 	},
