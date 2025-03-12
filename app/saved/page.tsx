@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSavedStore } from "@/store/useSavedStore";
 import { Share, Trash2 } from "lucide-react";
@@ -12,19 +12,22 @@ export default function SavedPost() {
 	const { data: session } = useSession();
 	const userId = session?.user?.id;
 
-	console.log("savedItems", savedItems);
-
 	useEffect(() => {
 		if (userId) {
 			console.log("Fetching saved posts for user:", userId);
 			fetchSavedPost();
 		}
 	}, []);
-
-	useEffect(() => {
-		console.log("Current savedItems in store:", savedItems);
-	}, []);
-
+	const savedLookup = useMemo(
+		() =>
+			savedItems.reduce((acc, item) => {
+				if (item.feedItem) {
+					acc[item.feedItem.id] = true;
+				}
+				return acc;
+			}, {} as Record<string, boolean>),
+		[savedItems],
+	);
 	const handleDelete = (savedItemId: string) => {
 		if (window.confirm("Are you sure you want to delete this saved post?")) {
 			deleteSavedPost(savedItemId);
@@ -53,12 +56,9 @@ export default function SavedPost() {
 						}
 
 						//@ts-expect-error FIXME: Update Type to fix this
-						const isSaved = isItemSaved(savedItem.feedItem.id);
-
-						//@ts-expect-error FIXME: Update Type to fix this
 						const item = savedItem.feedItem;
 
-						console.log("this is the item from save item", item);
+						const isSaved = Boolean(savedLookup[item.id]);
 
 						return (
 							<div
