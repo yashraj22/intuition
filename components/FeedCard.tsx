@@ -18,9 +18,9 @@ const FeedCard = ({ item, onShare }: FeedCardProps) => {
 	const [imageLoaded, setImageLoaded] = useState(false);
 	// const { toggleSavedItem, isItemSaved } = useSavedStore();
 	const { toggleSaveItem } = useFeedStore();
-	const { isItemSaved } = useSavedStore();
-	const isSaved = isItemSaved(item.id);
-	// const isSaved = useSavedStore((state) => !!state.savedItems[item.id]);
+	const isSaved = useSavedStore((state) =>
+		state.savedItems.some((saved) => saved.feedItem.id === item.id),
+	);
 
 	const { data: session } = useSession();
 	const handleSave = () => {

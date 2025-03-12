@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 	const body = await req.json();
 	const { userId, feedItemID } = await body;
 	try {
-		await prisma.saved.create({
+		const response = await prisma.saved.create({
 			data: {
 				userId: userId as string,
 				feedItemId: feedItemID as string,
