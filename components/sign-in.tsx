@@ -1,6 +1,8 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { Avatar } from "@/components/ui/avatar";
+import {User} from "lucide-react"
 
 export default function SignIn() {
   const handleButtonClick = async () => {
@@ -9,11 +11,8 @@ export default function SignIn() {
   };
 
   return (
-    <button
-      onClick={handleButtonClick}
-      className="text-white border border-white px-3 py-1 rounded-lg"
-    >
-      Sign in
-    </button>
+    <Avatar>
+          <button onClick = {handleButtonClick}><User/></button>
+        </Avatar>
   );
 }
