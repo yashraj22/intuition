@@ -10,7 +10,7 @@ export interface FeedItem {
 }
 
 export interface Source {
-  id: string; // Add id property
+  id?: string; // Add id property
   url: string;
   name: string;
 }
