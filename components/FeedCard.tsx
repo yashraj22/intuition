@@ -4,8 +4,9 @@ import { Bookmark, Share } from "lucide-react";
 import { FeedItem } from "../types/feed";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useSavedStore } from "@/store/useSavedStore";
+import { useFeedStore } from "@/store/useFeedStore";
 import { useSession } from "next-auth/react";
+import { useSavedStore } from "@/store/useSavedStore";
 
 interface FeedCardProps {
 	item: FeedItem;
@@ -15,14 +16,16 @@ interface FeedCardProps {
 
 const FeedCard = ({ item, onShare }: FeedCardProps) => {
 	const [imageLoaded, setImageLoaded] = useState(false);
-
-	const { toggleSavedItem, isItemSaved } = useSavedStore();
+	// const { toggleSavedItem, isItemSaved } = useSavedStore();
+	const { toggleSaveItem } = useFeedStore();
+	const { isItemSaved } = useSavedStore();
 	const isSaved = isItemSaved(item.id);
-	const { status, data: session } = useSession();
+	// const isSaved = useSavedStore((state) => !!state.savedItems[item.id]);
 
+	const { data: session } = useSession();
 	const handleSave = () => {
 		const userId = session?.user?.id || "anonymous";
-		toggleSavedItem(item, userId);
+		toggleSaveItem(item, userId);
 	};
 
 	return (
