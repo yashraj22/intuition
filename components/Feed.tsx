@@ -375,13 +375,8 @@ const Feed = () => {
 							onShare={handleShare}
 						/>
 					))}
-				{!loading &&
-					items.length === 0 &&
-					!isUpdatingFeed && ( // Show message if no items after initial load and no update in progress
-						<div className="w-full h-[100dvh] flex items-center justify-center text-white/60">
-							<p>No source items available. Add RSS feeds to get started.</p>
-						</div>
-					)}
+
+				
 			</div>
 
 			<Modal
