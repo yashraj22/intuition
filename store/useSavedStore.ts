@@ -96,7 +96,6 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 
 	// Check if an item is saved
 	isItemSaved: (id) => {
-
 		return get().savedItems.some((item) => item.feedItem.id === id);
 		// return !!get().savedItems[id];
 	},

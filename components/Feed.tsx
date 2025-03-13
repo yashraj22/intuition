@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import SignOut from "./sign-out";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useSavedStore } from "@/store/useSavedStore";
+import { parseHtmlContent } from "@/lib/actions";
 
 if (typeof window !== "undefined") {
 	Modal.setAppElement("body");
@@ -59,11 +60,6 @@ const Feed = () => {
 			name: "NASA News",
 		},
 	];
-
-	const parseHtmlContent = (html: string): string => {
-		const doc = new DOMParser().parseFromString(html, "text/html");
-		return doc.body.textContent || "";
-	};
 
 	const fetchRssItems = async (source: Source) => {
 		const corsProxy = "https://api.allorigins.win/raw?url=";
