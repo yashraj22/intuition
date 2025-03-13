@@ -26,7 +26,7 @@ const Feed = () => {
 	const [newFeedName, setNewFeedName] = useState("");
 	const [isUpdatingFeed, setIsUpdatingFeed] = useState(false); // Separate loading state for background updates
 	const { status, data: session } = useSession();
-	const { feedItems, loading, fetchFeedItems } = useFeedStore();
+	const { feedItems, loading, fetchFeedItems, saveFeed } = useFeedStore();
 	const { fetchSavedPost } = useSavedStore();
 
 	useEffect(() => {
@@ -170,52 +170,38 @@ const Feed = () => {
 		}
 
 		// Save only NEW fetched items to the database
-		saveFeed(newItems);
+		updateFeed(newItems);
 
 		setIsUpdatingFeed(false);
 		return [];
 	};
 
-	const saveFeed = async (newItems: FeedItem[]) => {
-		if (newItems.length > 0) {
-			try {
-				const saveResponse = await fetch("/api/save-feed", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(newItems),
+	const updateFeed = async (newItems: FeedItem[]) => {
+		try {
+			const saveResult = await saveFeed(newItems);
+			console.log("New source items saved to database:", saveResult);
+
+			// Update state with only the newly saved items
+			if (saveResult.data && saveResult.data.length > 0) {
+				setItems((prevItems) => {
+					// Create a Set of existing IDs for O(1) lookup
+					const existingIds = new Set(prevItems.map((item) => item.id));
+
+					// Only add items that don't already exist in the current state
+					const uniqueNewItems: FeedItem[] = saveResult.data.filter(
+						(item: FeedItem) => !existingIds.has(item.id),
+					);
+
+					if (uniqueNewItems.length > 0) {
+						toast.success(`${uniqueNewItems.length} new articles added!`);
+					}
+
+					return [...prevItems, ...uniqueNewItems];
 				});
-
-				if (!saveResponse.ok) {
-					throw new Error("Failed to save new source items to the database");
-				}
-
-				const saveResult = await saveResponse.json();
-				console.log("New source items saved to database:", saveResult);
-
-				// Update state with only the newly saved items
-				if (saveResult.data && saveResult.data.length > 0) {
-					setItems((prevItems) => {
-						// Create a Set of existing IDs for O(1) lookup
-						const existingIds = new Set(prevItems.map((item) => item.id));
-
-						// Only add items that don't already exist in the current state
-						const uniqueNewItems: FeedItem[] = saveResult.data.filter(
-							(item: FeedItem) => !existingIds.has(item.id),
-						);
-
-						if (uniqueNewItems.length > 0) {
-							toast.success(`${uniqueNewItems.length} new articles added!`);
-						}
-
-						return [...prevItems, ...uniqueNewItems];
-					});
-				}
-			} catch (error) {
-				console.error("Error saving new source items to database:", error);
-				toast.error("Error updating source with new articles.");
 			}
+		} catch (error) {
+			console.error("Error saving new source items to database:", error);
+			toast.error("Error updating source with new articles.");
 		}
 	};
 
@@ -375,8 +361,6 @@ const Feed = () => {
 							onShare={handleShare}
 						/>
 					))}
-
-				
 			</div>
 
 			<Modal
