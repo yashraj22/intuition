@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import { SavedItem } from "@/types/feed"; // Import the FeedItem type
+import { SavedItem, FeedItem } from "@/types/feed"; // Import the FeedItem type
 
 interface SavedStore {
 	savedItems: SavedItem[]; // Store FeedItem objects instead of strings
-	toggleSavedItem: (item: SavedItem, userId: string | undefined) => void; // Accept a FeedItem object
+	toggleSavedItem: (item: FeedItem, userId: string | undefined) => void; // Accept a FeedItem object
 	isItemSaved: (id: string) => boolean; // Check if an item is saved by ID
 	fetchSavedPost: () => void;
 	deleteSavedPost: (itemId: string) => void; // Added userId parameter
@@ -13,7 +13,7 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 	savedItems: [], // Initial state: no saved items
 
 	// Toggle saved item
-	toggleSavedItem: async (item: SavedItem, userId: string | undefined) => {
+	toggleSavedItem: async (item: FeedItem, userId: string | undefined) => {
 		const isSaved = get().savedItems.some((savedItem) => {
 			return savedItem.feedItem.id === item.id;
 		});
@@ -23,7 +23,7 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 		)?.id;
 
 		if (isSaved) {
-			get().deleteSavedPost(savedItemId);
+			get().deleteSavedPost(savedItemId as string);
 			set({
 				savedItems: get().savedItems.filter(
 					(savedItem) => savedItem.id !== item.id,
@@ -87,8 +87,6 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 			set((state) => ({
 				savedItems: state.savedItems.filter((item) => item.id != itemId),
 			}));
-
-			const data = await response.json();
 		} catch (error) {
 			console.error("Error deleting", error);
 		}
@@ -96,7 +94,6 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
 
 	// Check if an item is saved
 	isItemSaved: (id) => {
-		return get().savedItems.some((item) => item.feedItem.id === id);
-		// return !!get().savedItems[id];
+		return get().savedItems.some((item) => item.feedItem?.id === id);
 	},
 }));

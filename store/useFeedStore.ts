@@ -12,7 +12,7 @@ interface FeedStore {
 	saveFeed: (newItems: FeedItem[]) => Promise<JSON | void>;
 }
 
-export const useFeedStore = create<FeedStore>((set, get) => ({
+export const useFeedStore = create<FeedStore>((set) => ({
 	feedItems: [],
 	loading: false,
 	error: null,
@@ -70,14 +70,4 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
 			console.error("Error saving new source items to database:", error);
 		}
 	},
-
-	// isItemSaved: (id: string) => {
-	// 	// This will only give you a snapshot of the current state
-	// 	// console.log(
-	// 	// 	"isItemSaved called with id:",
-	// 	// 	get().feedItems.map((item) => (item.id === id ? item : null)),
-	// 	// 	useSavedStore.getState().isItemSaved(id),
-	// 	// );
-	// 	return useSavedStore.getState().isItemSaved(id);
-	// },
 }));

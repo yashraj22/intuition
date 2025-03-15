@@ -1,21 +1,21 @@
 import { create } from "zustand";
-import { SourcesItem } from "@/types/feed"; // Import the FeedItem type
+import { Source } from "@/types/feed"; // Import the FeedItem type
 
 interface SourcesStore {
-	SourcesItems: SourcesItem[]; // Store FeedItem objects instead of strings
-	addSourceItem: (source: SourcesItem, userId: string | undefined) => void; // Accept a FeedItem object
-	removeSourceItem: (source: SourcesItem) => boolean; // Check if an item is Sources by ID
+	Sources: Source[]; // Store FeedItem objects instead of strings
+	addSourceItem: (source: Source, userId: string | undefined) => void; // Accept a FeedItem object
+	removeSourceItem: (source: Source) => boolean; // Check if an item is Sources by ID
 	getSources: () => void;
 	deleteSource: (itemId: string) => void; // Added userId parameter
 }
 
 export const useSourcesStore = create<SourcesStore>((set, get) => ({
-	SourcesItems: [], // Initial state: no Sources items
+	Sources: [], // Initial state: no Sources items
 
 	// Add Sources item
-	addSourceItem: async (source: SourcesItem, userId: string | undefined) => {
+	addSourceItem: async (source: Source, userId: string | undefined) => {
 		set((state) => ({
-			SourcesItems: [...state.SourcesItems, source],
+			Sources: [...state.Sources, source],
 		}));
 		console.log("POST", userId, source);
 		try {
@@ -35,12 +35,10 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
 	},
 
 	// Remove Sources item
-	removeSourceItem: (source: SourcesItem) => {
-		const isRemoved = get().SourcesItems.filter(
-			(item) => item.url !== source.url,
-		);
-		set({ SourcesItems: isRemoved });
-		return isRemoved.length !== get().SourcesItems.length;
+	removeSourceItem: (source: Source) => {
+		const isRemoved = get().Sources.filter((item) => item.url !== source.url);
+		set({ Sources: isRemoved });
+		return isRemoved.length !== get().Sources.length;
 	},
 
 	getSources: async () => {
@@ -55,7 +53,7 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
 			console.log(response);
 			const data = await response.json();
 
-			set({ SourcesItems: data.data });
+			set({ Sources: data.data });
 		} catch (error) {
 			console.error("Error", error);
 		}
@@ -76,7 +74,7 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
 			}
 
 			set((state) => ({
-				SourcesItems: state.SourcesItems.filter((item) => item.id != itemId),
+				Sources: state.Sources.filter((item) => item.id != itemId),
 			}));
 
 			const data = await response.json();
