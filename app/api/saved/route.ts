@@ -32,7 +32,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
 	const body = await req.json();
-	const { userId, feedItemID } = await body;
+	const { userId, feedItemID }: { userId: string; feedItemID: string } =
+		await body;
 	try {
 		const response = await prisma.saved.create({
 			data: {
@@ -40,10 +41,12 @@ export async function POST(req: NextRequest) {
 				feedItemId: feedItemID as string,
 			},
 		});
-		return NextResponse.json(
-			{ success: true, message: "Post saved successfully!", data: response },
-			{ status: 201 },
-		);
+		return NextResponse.json({
+			success: true,
+			message: "Post saved successfully!",
+			data: response,
+			status: 201,
+		});
 	} catch (error) {
 		console.error("Error creating message:", error);
 	}

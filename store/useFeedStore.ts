@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { FeedItem } from "@prisma/client";
 import { useSavedStore } from "./useSavedStore";
+import { FeedItem } from "@/types/feed";
 
 interface FeedStore {
 	feedItems: FeedItem[]; // Feed items from API
@@ -9,7 +9,7 @@ interface FeedStore {
 	fetchFeedItems: () => Promise<void>;
 	toggleSaveItem: (item: FeedItem, userId: string | undefined) => void;
 	// isItemSaved: (id: string) => boolean;
-	saveFeed: (newItems: FeedItem[]) => Promise<JSON | void>;
+	saveFeed: (newItems: FeedItem[]) => Promise<JSON>;
 }
 
 export const useFeedStore = create<FeedStore>((set) => ({
